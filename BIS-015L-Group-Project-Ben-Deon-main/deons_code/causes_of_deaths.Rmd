@@ -1,0 +1,59 @@
+---
+title: "Causes of Deaths"
+author: "Deon Vasquez, Ben Ramirez"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Importing all libraries
+
+```{r}
+library("janitor")
+library("tidyverse")
+library("shiny")
+library("shinydashboard")
+library("janitor")
+library("here")
+```
+
+```{r}
+deaths <- readr::read_csv("data/cause_of_deaths.csv")
+deaths
+```
+```{r}
+names(deaths)
+```
+```{r}
+clean_names_deaths <- janitor::clean_names(deaths)
+```
+```{r}
+names(clean_names_deaths)
+```
+
+```{r}
+library(shiny)
+
+ui <- dashboardPage(
+  dashboardHeader(title = "Causes of Deaths by Country"),
+  dashboardSidebar(),
+  dashboardBody(
+    fluidRow(
+      box(title = "Plot Options", width = 3,
+          selectInput("country", "Select Country", choices =  )
+          )
+    )
+  )
+  
+)
+
+server <- function(input, output, session) {
+  
+}
+
+shinyApp(ui, server)
+```
+
