@@ -1,0 +1,31 @@
+---
+title: "Causes of Deaths"
+author: "Deon Vasquez, Ben Ramirez"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Importing all libraries
+
+```{r}
+library("janitor")
+library("tidyverse")
+library("shiny")
+library("shinydashboard")
+```
+
+```{r}
+getwd()
+cause_of_death <- read_csv("data/death/cause_of_deaths.csv")
+car_death <- read_csv("data/death/output.csv")
+```
+
+```{r}
+full_cause_of_death <- full_join(cause_of_death, car_death, by="customer_ID")
+full_exampleDF
+```
+
