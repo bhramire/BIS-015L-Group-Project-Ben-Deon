@@ -1,0 +1,70 @@
+---
+title: "Causes of Deaths"
+author: "Deon Vasquez, Ben Ramirez"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Importing all libraries
+
+```{r}
+library("janitor")
+library("tidyverse")
+library("shiny")
+library("shinydashboard")
+```
+##Loading Data
+```{r}
+cause_of_death <- read_csv("data/death/cause_of_deaths.csv") %>% clean_names()
+car_death <- read_csv("data/death/output.csv") %>% clean_names()
+
+```
+##Preparing to join
+```{r}
+
+cause_of_death_country <- rename(cause_of_death, country = "country_territory")
+car_death_country <- rename(car_death, country = "entity")
+cause_of_death_country
+car_death_country
+```
+
+##Looking at Data Structure
+```{r}
+glimpse(cause_of_death_country)
+glimpse(car_death_country)
+```
+
+##Joining Data Sets
+
+```{r}
+full_cause_of_death <- full_join(cause_of_death_country, car_death_country, by="country") 
+full_cause_of_death <- rename(full_cause_of_death, automobile_deaths = "deaths")
+full_cause_of_death
+##pivot longer
+##mutate proportions
+```
+##Sorting out Non-infectious or Irrelevant modes of death to Travelers.
+```{r}
+names(full_cause_of_death)
+sorted_cause_of_death <- full_cause_of_death %>% 
+  select(-c(code.x, code.y, year.y, automobile_deaths, sidedness,meningitis, alzheimers_disease_and_other_dementias, parkinsons_disease, nutritional_deficiencies,maternal_disorders, cardiovascular_diseases, neonatal_disorders, self_harm, neoplasms, diabetes_mellitus, chronic_kidney_disease, chronic_respiratory_diseases, cirrhosis_and_other_chronic_liver_diseases,acute_hepatitis))
+sorted_cause_of_death
+```
+
+##Elongating Data
+```{r}
+longer_cause_of_death <- sorted_cause_of_death %>%  
+  pivot_longer(-c(country, year.x,historical_population), 
+               names_to = "cause_of_death",
+               values_to = "deaths")
+longer_cause_of_death
+```
+```{r}
+longer_cause_of_death_clean <- longer_cause_of_death %>% 
+  rename(longer_cause_of_death, year = "year.x")
+```
+
