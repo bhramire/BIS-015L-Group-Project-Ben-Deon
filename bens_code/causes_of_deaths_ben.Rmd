@@ -20,51 +20,79 @@ library("shinydashboard")
 ##Loading Data
 ```{r}
 cause_of_death <- read_csv("data/death/cause_of_deaths.csv") %>% clean_names()
-car_death <- read_csv("data/death/output.csv") %>% clean_names()
+
 
 ```
-##Preparing to join
+##Little bit of cleaning to make a happy coder
 ```{r}
-
 cause_of_death_country <- rename(cause_of_death, country = "country_territory")
-car_death_country <- rename(car_death, country = "entity")
 cause_of_death_country
-car_death_country
 ```
 
 ##Looking at Data Structure
 ```{r}
 glimpse(cause_of_death_country)
-glimpse(car_death_country)
 ```
 
-##Joining Data Sets
 
-```{r}
-full_cause_of_death <- full_join(cause_of_death_country, car_death_country, by="country") 
-full_cause_of_death <- rename(full_cause_of_death, automobile_deaths = "deaths")
-full_cause_of_death
-##pivot longer
-##mutate proportions
-```
 ##Sorting out Non-infectious or Irrelevant modes of death to Travelers.
 ```{r}
-names(full_cause_of_death)
-sorted_cause_of_death <- full_cause_of_death %>% 
-  select(-c(code.x, code.y, year.y, automobile_deaths, sidedness,meningitis, alzheimers_disease_and_other_dementias, parkinsons_disease, nutritional_deficiencies,maternal_disorders, cardiovascular_diseases, neonatal_disorders, self_harm, neoplasms, diabetes_mellitus, chronic_kidney_disease, chronic_respiratory_diseases, cirrhosis_and_other_chronic_liver_diseases,acute_hepatitis))
+names(cause_of_death_country)
+sorted_cause_of_death <- cause_of_death_country%>% 
+  select(-c( meningitis, alzheimers_disease_and_other_dementias, parkinsons_disease, nutritional_deficiencies,maternal_disorders, cardiovascular_diseases, neonatal_disorders, self_harm, neoplasms, diabetes_mellitus, chronic_kidney_disease, chronic_respiratory_diseases, cirrhosis_and_other_chronic_liver_diseases,acute_hepatitis))
 sorted_cause_of_death
 ```
 
 ##Elongating Data
 ```{r}
 longer_cause_of_death <- sorted_cause_of_death %>%  
-  pivot_longer(-c(country, year.x,historical_population), 
+  pivot_longer(-c("country","code","year"), 
                names_to = "cause_of_death",
                values_to = "deaths")
 longer_cause_of_death
 ```
+##A Little More Cleaning
 ```{r}
 longer_cause_of_death_clean <- longer_cause_of_death %>% 
-  rename(longer_cause_of_death, year = "year.x")
+  rename( year = "year", country_code = "code")
+longer_cause_of_death_clean
+```
+
+##Selecting Countries of Interest(Asia)/Selecting popular tourist countries in Asia
+```{r}
+tourist_countries_asia_death <- longer_cause_of_death_clean %>% 
+  filter(country_code %in% c("THA","VNM","JPN","IND","IDN","CHN","KHM", "PHL", "MDV","KOR","MYS","MMR","LAO","SGP"))
+tourist_countries_asia_death
+```
+##Sorting into more recent years (2010 and on)
+```{r}
+modern_cause_of_death <- tourist_countries_asia_death%>% 
+filter(year>= 2010)
+modern_cause_of_death
+```
+
+```{r}
+
+
+ui <- dashboardPage(
+  dashboardHeader(title = "Death in Asia"),
+  dashboardSidebar(disable=T),
+  dashboardBody(
+    selectInput("x", "Select Country", choices = c("Thailand", "Vietnam", "Japan", "India", "Indonesia", "South Korea", "Phillipines", "Laos","Bangladesh", "Maldives", "China","Malaysia", "Myanmar", "Singapore", "Cambodia" ), selected = "Cambodia"),
+    selectInput("y", "Select Cause of Death", choices = c("malaria","drowning","interpersonal_violence","hiv_aids","drug_use_disorders","tuberculosis","lower_respiratory_infections","alcohol_use_disorders","exposure_to_forces_of_nature	","diarrheal_diseases","environmental_heat_and_cold_exposure","conflict_and_terrorism","poisonings	","protein_energy_malnutrition","road_injuries","digestive_diseases","fire_heat_and_hot_substances"), selected = "malaria" )
+  ),
+  plotOutput("plot", width = "500px", height = "400px")
+)
+
+server <- function(input, output, session) {
+  output$plot <- renderPlot({
+    modern_cause_of_death %>% 
+      filter(country == input$x) %>% 
+      ggplot(aes(x=country, y=input$y))+geom_col()
+  })
+  session$onSessionEnded(stopApp)
+}
+
+shinyApp(ui, server)
 ```
 
