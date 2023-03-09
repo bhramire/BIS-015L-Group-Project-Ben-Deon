@@ -1,0 +1,92 @@
+---
+title: "Causes of Deaths"
+author: "Deon Vasquez, Ben Ramirez"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Importing all libraries
+
+```{r}
+library("janitor")
+library("tidyverse")
+library("shiny")
+library("shinydashboard")
+library("janitor")
+library("here")
+```
+# Importing data
+```{r}
+deaths <- readr::read_csv("data/cause_of_deaths.csv")
+deaths
+```
+```{r}
+names(deaths)
+```
+
+# Cleaning names
+```{r}
+clean_names_deaths <- janitor::clean_names(deaths)
+```
+```{r}
+names(clean_names_deaths)
+```
+```{r}
+clean_names_deaths_long <- clean_names_deaths %>% 
+  pivot_longer(-c("country_territory", "code", "year"),
+               names_to = "causes",
+               values_to = "deaths")
+```
+
+# Limiting Cause of Deaths
+
+```{r}
+names(clean_names_deaths)
+```
+
+
+```{r}
+short_deaths_long <- clean_names_deaths_long %>% 
+  filter(causes %in% c("country_territory", "code", "year", "malaria", "drowning", "interpersonal_violence", "hiv_aids", "tuberculosis","alcohol_use_disorders","exposure_to_forces_of_nature","diarrheal_diseases", "environmental_heat_and_cold_exposure", "conflict_and_terrorism", "poisonings", "protein_energy_malnutrition", "road_injuries", "digestive_diseases", "digestive_diseases"))
+```
+
+
+# Limiting to South America
+
+```{r}
+south_america <- short_deaths_long %>% 
+  filter(country_territory %in% c("Venezuela", "Colombia", "Ecuador", "Peru", "Chile", "Argentina", "Uruguay", "Paraguay", "Bolivia", "Brazil", "Suriname", "Guyana"))
+```
+
+
+```{r}
+library(shiny)
+
+ui <- dashboardPage(
+  dashboardHeader(title = "Causes of Deaths by Country"),
+  dashboardSidebar(disable = T),
+  dashboardBody(
+    fluidRow(
+      box(title = "Plot Options", width = 3,
+          selectInput("country", "Select Country", choices = clean_names_deaths_long$country_territory, 
+                      selected = "Afghanistan"),
+          selectInput("cause", "Select Cause of Death Category", choices = clean_names_deaths_long$causes,
+                      selected = "meningitis")
+      )
+    )
+  )
+  
+)
+
+server <- function(input, output, session) {
+  
+  session$onSessionEnded(stopApp)
+}
+
+shinyApp(ui, server)
+```
+
