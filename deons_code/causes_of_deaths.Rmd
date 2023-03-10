@@ -17,7 +17,6 @@ library("tidyverse")
 library("shiny")
 library("shinydashboard")
 library("janitor")
-library("here")
 ```
 # Importing data
 ```{r}
@@ -62,6 +61,10 @@ south_america <- short_deaths_long %>%
   filter(country_territory %in% c("Venezuela", "Colombia", "Ecuador", "Peru", "Chile", "Argentina", "Uruguay", "Paraguay", "Bolivia", "Brazil", "Suriname", "Guyana"))
 ```
 
+```{r}
+summary(south_america)
+```
+
 
 ```{r}
 library(shiny)
@@ -72,19 +75,177 @@ ui <- dashboardPage(
   dashboardBody(
     fluidRow(
       box(title = "Plot Options", width = 3,
-          selectInput("country", "Select Country", choices = clean_names_deaths_long$country_territory, 
-                      selected = "Afghanistan"),
-          selectInput("cause", "Select Cause of Death Category", choices = clean_names_deaths_long$causes,
-                      selected = "meningitis")
+          selectInput("cause", "Select Cause of Death", choices = south_america$causes, 
+                      selected = "malaria"),
+          selectInput("year", "Select Range of Year (1990 - 2019)", choices = south_america$year),
+      ),
+       box(plotOutput("plot", width = "500px", height = "500px")
+      )
+    ),
+    fluidRow(
+      box(title = "Plot Options", width = 3,
+          selectInput("cause", "Select Cause of Death", choices = south_america$causes, 
+                      selected = "malaria"),
+          selectInput("country", "Select Country", choices = south_america$country_territory),
+      ),
+       box(plotOutput("plot2", width = "500px", height = "500px")
       )
     )
   )
-  
 )
 
 server <- function(input, output, session) {
   
+  output$plot <- renderPlot({
+    
+    south_america %>% 
+      filter(causes == input$cause) %>% # user selects death type
+      filter(year == input$year) %>% # user selects year
+      ggplot(aes(x= country_territory, y= deaths, fill = country_territory))+ 
+        geom_col()
+      
+  })
+  
+  output$plot2 <- renderPlot({
+    
+    south_america %>% 
+  filter(country_territory == input$country) %>% 
+  filter(causes == input$cause) %>% 
+  mutate(year = as_factor(year)) %>% 
+  ggplot(aes(x=year, y= deaths))+
+  geom_col()
+    
+  })
+  
   session$onSessionEnded(stopApp)
+}
+
+shinyApp(ui, server)
+```
+
+
+```{r}
+south_america %>% 
+  pivot_wider(names_from = causes, values_from = deaths) %>% 
+  filter(year == 2019) %>% 
+  ggplot(aes(x= country_territory, y= "tuberculosis"))+
+  geom_col()
+```
+
+```{r}
+south_america %>% 
+      filter(causes == "malaria") %>% 
+      pivot_wider(names_from = causes, values_from = deaths) %>% 
+      filter(year == 2019) %>% 
+      ggplot(aes(x= country_territory, y= malaria, fill= country_territory))+
+        geom_col()
+```
+
+```{r}
+south_america %>% 
+  filter(country_territory == "Brazil") %>% 
+  ggplot(aes(x=year, y= deaths, color = causes))+
+  geom_line() 
+```
+
+```{r}
+south_america %>% 
+  filter(country_territory == "Brazil") %>% 
+  pivot_wider(names_from = causes, values_from = deaths) %>%
+  mutate(year = as_factor(year)) %>% 
+  ggplot(aes(x=year, y= malaria))+
+  geom_col()
+```
+
+```{r}
+library(shiny)
+
+ui <- dashboardPage(
+  dashboardHeader(title = "Causes of Deaths by Country"),
+  dashboardSidebar(disable = F),
+  dashboardBody(
+    fluidRow(
+      box(title = "Plot Options", width = 3,
+          selectInput("cause", "Select Cause of Death", choices = south_america$causes, 
+                      selected = "malaria"),
+          selectInput("country", "Select Country", choices = south_america$country_territory),
+      ),
+       box(plotOutput("plot2", width = "500px", height = "500px")
+      )
+    )
+  )
+)
+
+server <- function(input, output, session) {
+  
+  output$plot2 <- renderPlot({
+    
+    south_america %>% 
+  filter(country_territory == input$country) %>% 
+  filter(causes == input$cause) %>% 
+  mutate(year = as_factor(year)) %>% 
+  ggplot(aes(x=year, y= deaths))+
+  geom_col()
+    
+  })
+  
+  session$onSessionEnded(stopApp)
+}
+
+shinyApp(ui, server)
+```
+
+
+
+```{r}
+south_america %>% 
+  filter(country_territory == "Venezuela
+         ") %>% 
+  pivot_wider(names_from = causes, values_from = deaths) %>%
+  mutate(year = as_factor(year)) %>% 
+  ggplot(aes(x=year, y= malaria))+
+  geom_col()
+```
+
+
+```{r}
+south_america %>% 
+  filter(year >= 1990) %>% 
+  filter(year <= 2005) %>% 
+  
+```
+
+
+```{r}
+library(shiny)
+
+ui <- dashboardBody(
+    fluidRow(
+      box(title = "Plot Options", width = 3,
+          selectInput("cause", "Select Cause of Death", choices = south_america$causes, 
+                      selected = "malaria"),
+          selectInput("country", "Select Country", choices = south_america$country_territory),
+      ),
+       box(plotOutput("plot2", width = "500px", height = "500px")
+       )
+    )
+)
+
+server <- function(input, output, session) {
+  
+    output$plot2 <- renderPlot({
+    
+    south_america %>% 
+  filter(country_territory == input$country) %>% 
+  filter(causes == input$cause) %>% 
+  mutate(year = as_factor(year)) %>% 
+  ggplot(aes(x=year, y= deaths))+
+  geom_col()
+    
+  })
+  
+  session$onSessionEnded(stopApp)
+
 }
 
 shinyApp(ui, server)
