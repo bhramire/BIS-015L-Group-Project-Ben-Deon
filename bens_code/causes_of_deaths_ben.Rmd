@@ -78,21 +78,72 @@ ui <- dashboardPage(
   dashboardHeader(title = "Death in Asia"),
   dashboardSidebar(disable=T),
   dashboardBody(
+     fluidRow(
+    box(title = "Plot Settings", width =3,   
     selectInput("x", "Select Country", choices = c("Thailand", "Vietnam", "Japan", "India", "Indonesia", "South Korea", "Phillipines", "Laos","Bangladesh", "Maldives", "China","Malaysia", "Myanmar", "Singapore", "Cambodia" ), selected = "Cambodia"),
     selectInput("y", "Select Cause of Death", choices = c("malaria","drowning","interpersonal_violence","hiv_aids","drug_use_disorders","tuberculosis","lower_respiratory_infections","alcohol_use_disorders","exposure_to_forces_of_nature	","diarrheal_diseases","environmental_heat_and_cold_exposure","conflict_and_terrorism","poisonings	","protein_energy_malnutrition","road_injuries","digestive_diseases","fire_heat_and_hot_substances"), selected = "malaria" )
+  )
   ),
-  plotOutput("plot", width = "500px", height = "400px")
+  box(plotOutput("plot", width = "500px", height = "400px")
 )
-
+)
+)
 server <- function(input, output, session) {
   output$plot <- renderPlot({
     modern_cause_of_death %>% 
       filter(country == input$x) %>% 
-      ggplot(aes(x=country, y=input$y))+geom_col()
+      filter(cause_of_death==input$y) %>% 
+      mutate(year = as_factor(year)) %>% 
+      ggplot(aes(x=year, y=deaths, fill=year))+geom_col()+labs(title = "Number of Deaths by Cause per Year from 2010-2019", x= "Year 2010-2019", y="Number of Deaths")
   })
   session$onSessionEnded(stopApp)
 }
 
 shinyApp(ui, server)
+```
+
+```{r}
+
+south_america %>% 
+  
+```
+
+```{r}
+
+
+ui <- dashboardPage(
+  dashboardHeader(title = "Death by Asian Country"),
+  dashboardSidebar(disable=T),
+  dashboardBody(
+       
+    selectInput("x", "Select Country", choices = c("Thailand", "Vietnam", "Japan", "India", "Indonesia", "South Korea", "Phillipines", "Laos","Bangladesh", "Maldives", "China","Malaysia", "Myanmar", "Singapore", "Cambodia" ), selected = "Thailand"),
+  plotOutput("plot", width = "500px", height = "400px")
+
+)
+)
+server <- function(input, output, session) {
+  output$plot <- renderPlot({
+    modern_cause_of_death %>% 
+      
+     filter(country == input$x) %>% 
+  ggplot(aes(x=year, y= deaths, color = cause_of_death))+
+  geom_line()+labs(title = "Deaths yearly sorted by Cause per Country", x= "Year 2010-2019", y="Number of Deaths")
+  })
+  session$onSessionEnded(stopApp)
+}
+
+shinyApp(ui, server)
+```
+fluidRow(
+    box(title = "Plot Settings", width =3, 
+box(
+
+
+```{r}
+modern_cause_of_death %>% 
+      mutate(year = as_factor(year)) %>% 
+     filter(country == "China") %>% 
+  ggplot(aes(x=year, y= deaths, color = cause_of_death))+
+  geom_line()+labs(title = "Number of Deaths by Cause per Year from 2010-2019", x= "Year 2010-2019", y="Number of Deaths")+scale_y_log10()
 ```
 
