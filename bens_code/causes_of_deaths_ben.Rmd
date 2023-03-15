@@ -16,6 +16,7 @@ library("janitor")
 library("tidyverse")
 library("shiny")
 library("shinydashboard")
+options(scipen=999)
 ```
 ##Loading Data
 ```{r}
@@ -61,7 +62,7 @@ longer_cause_of_death_clean
 ##Selecting Countries of Interest(Asia)/Selecting popular tourist countries in Asia
 ```{r}
 tourist_countries_asia_death <- longer_cause_of_death_clean %>% 
-  filter(country_code %in% c("THA","VNM","JPN","IND","IDN","CHN","KHM", "PHL", "MDV","KOR","MYS","MMR","LAO","SGP"))
+  filter(country_code %in% c("THA","VNM","JPN","IND","IDN","CHN","KHM", "PHL", "MDV","KOR","MYS","MMR","LAO","SGP", "BGD"))
 tourist_countries_asia_death
 ```
 ##Sorting into more recent years (2010 and on)
@@ -80,8 +81,8 @@ ui <- dashboardPage(
   dashboardBody(
      fluidRow(
     box(title = "Plot Settings", width =3,   
-    selectInput("x", "Select Country", choices = c("Thailand", "Vietnam", "Japan", "India", "Indonesia", "South Korea", "Phillipines", "Laos","Bangladesh", "Maldives", "China","Malaysia", "Myanmar", "Singapore", "Cambodia" ), selected = "Cambodia"),
-    selectInput("y", "Select Cause of Death", choices = c("malaria","drowning","interpersonal_violence","hiv_aids","drug_use_disorders","tuberculosis","lower_respiratory_infections","alcohol_use_disorders","exposure_to_forces_of_nature	","diarrheal_diseases","environmental_heat_and_cold_exposure","conflict_and_terrorism","poisonings	","protein_energy_malnutrition","road_injuries","digestive_diseases","fire_heat_and_hot_substances"), selected = "malaria" )
+    selectInput("x", "Select Country", choices = c("Bangladesh", "Cambodia","China","India","Indonesia","Japan","Laos","Malaysia","Maldives","Myanmar","Philippines","Singapore","South Korea","Thailand", "Vietnam"), selected = "Cambodia"),
+    selectInput("y", "Select Cause of Death", choices = c("alcohol_use_disorders","diarrheal_diseases","drowning","drug_use_disorders","exposure_to_forces_of_nature","hiv_aids","interpersonal_violence","lower_respiratory_infections","malaria","tuberculosis","environmental_heat_and_cold_exposure","conflict_and_terrorism","poisonings	","protein_energy_malnutrition","road_injuries","digestive_diseases","fire_heat_and_hot_substances"), selected = "alcohol_use_disorders" )
   )
   ),
   box(plotOutput("plot", width = "500px", height = "400px")
@@ -94,18 +95,12 @@ server <- function(input, output, session) {
       filter(country == input$x) %>% 
       filter(cause_of_death==input$y) %>% 
       mutate(year = as_factor(year)) %>% 
-      ggplot(aes(x=year, y=deaths, fill=year))+geom_col()+labs(title = "Number of Deaths by Cause per Year from 2010-2019", x= "Year 2010-2019", y="Number of Deaths")
+      ggplot(aes(x=year, y=deaths, fill=year))+geom_col()+labs(title = "Number of Deaths by Cause per Year from 2010-2019", x= "Year 2010-2019", y="Number of Deaths", fill = "Year")
   })
   session$onSessionEnded(stopApp)
 }
 
 shinyApp(ui, server)
-```
-
-```{r}
-
-south_america %>% 
-  
 ```
 
 ```{r}
@@ -116,7 +111,7 @@ ui <- dashboardPage(
   dashboardSidebar(disable=T),
   dashboardBody(
        
-    selectInput("x", "Select Country", choices = c("Thailand", "Vietnam", "Japan", "India", "Indonesia", "South Korea", "Phillipines", "Laos","Bangladesh", "Maldives", "China","Malaysia", "Myanmar", "Singapore", "Cambodia" ), selected = "Thailand"),
+    selectInput("x", "Select Country", choices = c("Bangladesh", "Cambodia","China","India","Indonesia","Japan","Laos","Malaysia","Maldives","Myanmar","Philippines","Singapore","South Korea","Thailand", "Vietnam"), selected = "Thailand"),
   plotOutput("plot", width = "500px", height = "400px")
 
 )
@@ -127,23 +122,34 @@ server <- function(input, output, session) {
       
      filter(country == input$x) %>% 
   ggplot(aes(x=year, y= deaths, color = cause_of_death))+
-  geom_line()+labs(title = "Deaths yearly sorted by Cause per Country", x= "Year 2010-2019", y="Number of Deaths")
+  geom_line()+labs(title = "Deaths yearly sorted by Cause per Country", x= "Year 2010-2019", y="Number of Deaths", color = "Cause of Death")
   })
   session$onSessionEnded(stopApp)
 }
 
 shinyApp(ui, server)
 ```
-fluidRow(
-    box(title = "Plot Settings", width =3, 
-box(
-
 
 ```{r}
-modern_cause_of_death %>% 
-      mutate(year = as_factor(year)) %>% 
-     filter(country == "China") %>% 
-  ggplot(aes(x=year, y= deaths, color = cause_of_death))+
-  geom_line()+labs(title = "Number of Deaths by Cause per Year from 2010-2019", x= "Year 2010-2019", y="Number of Deaths")+scale_y_log10()
+ui <- dashboardPage(
+  dashboardHeader(title = "Deaths in Asia by Year"),
+  dashboardSidebar(disable=T),
+  dashboardBody(
+    fluidRow(
+      box(title = "Plot Settings",width = 3,
+            selectInput("y", "Select Year", choices = c("2010","2011","2012","2013","2014","2015","2016","2017", "2018", "2019"), selected = "2010"),
+          selectInput("x", "Select Country", choices = c("Bangladesh", "Cambodia","China","India","Indonesia","Japan","Laos","Malaysia","Maldives","Myanmar","Philippines","Singapore","South Korea","Thailand", "Vietnam"), selected = "Thailand"),
+          plotOutput("plot", width = "500px", height = "400px")))))
+server <- function(input, output, session) {
+  output$plot <- renderPlot({
+    modern_cause_of_death %>% 
+      filter(year== input$y) %>% 
+      filter(country== input$x) %>% 
+      ggplot(aes(x=cause_of_death, y= deaths, fill=cause_of_death))+geom_col()+theme(axis.text.x =)+labs(title = "Deaths in Asia Sorted by Country and Year", x= "Cause of Death", y="Number of Deaths", fill = "Cause of Death")+ theme(axis.text.x = element_blank(), axis.ticks = element_blank())
+  })
+        session$onSessionEnded(stopApp)
+}
+
+shinyApp(ui, server)
 ```
 
