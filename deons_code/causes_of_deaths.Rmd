@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Importing all libraries
+### Importing all libraries
 
 ```{r}
 library("janitor")
@@ -18,18 +18,21 @@ library("shiny")
 library("shinydashboard")
 library("janitor")
 ```
+## South America (Deon Vasquez)
+
 # Importing data
 ```{r}
-deaths <- readr::read_csv("data/cause_of_deaths.csv")
-deaths
+deaths_table <- readr::read_csv("data/cause_of_deaths.csv")
+deaths_table
 ```
 ```{r}
-names(deaths)
+names(deaths_table)
 ```
+
 
 # Cleaning names
 ```{r}
-clean_names_deaths <- janitor::clean_names(deaths)
+clean_names_deaths <- janitor::clean_names(deaths_table)
 ```
 ```{r}
 names(clean_names_deaths)
@@ -42,12 +45,6 @@ clean_names_deaths_long <- clean_names_deaths %>%
 ```
 
 # Limiting Cause of Deaths
-
-```{r}
-names(clean_names_deaths)
-```
-
-
 ```{r}
 short_deaths_long <- clean_names_deaths_long %>% 
   filter(causes %in% c("country_territory", "code", "year", "malaria", "drowning", "interpersonal_violence", "hiv_aids", "tuberculosis","alcohol_use_disorders","exposure_to_forces_of_nature","diarrheal_diseases", "environmental_heat_and_cold_exposure", "conflict_and_terrorism", "poisonings", "protein_energy_malnutrition", "road_injuries", "digestive_diseases", "digestive_diseases"))
@@ -65,34 +62,210 @@ south_america <- short_deaths_long %>%
 summary(south_america)
 ```
 
+\newline
+
+##East Asia (Ben Ramirez)
+
+#Loading Data
+```{r}
+cause_of_death <- read_csv("data/cause_of_deaths.csv") %>% clean_names()
+
+
+```
+#Little bit of cleaning to make a happy coder
+```{r}
+cause_of_death_country <- rename(cause_of_death, country = "country_territory")
+cause_of_death_country
+```
+
+#Looking at Data Structure
+```{r}
+glimpse(cause_of_death_country)
+```
+
+
+#Sorting out Non-infectious or Irrelevant modes of death to Travelers.
+```{r}
+names(cause_of_death_country)
+sorted_cause_of_death <- cause_of_death_country%>% 
+  select(-c( meningitis, alzheimers_disease_and_other_dementias, parkinsons_disease, nutritional_deficiencies,maternal_disorders, cardiovascular_diseases, neonatal_disorders, self_harm, neoplasms, diabetes_mellitus, chronic_kidney_disease, chronic_respiratory_diseases, cirrhosis_and_other_chronic_liver_diseases,acute_hepatitis))
+sorted_cause_of_death
+```
+
+#Elongating Data
+```{r}
+longer_cause_of_death <- sorted_cause_of_death %>%  
+  pivot_longer(-c("country","code","year"), 
+               names_to = "cause_of_death",
+               values_to = "deaths")
+longer_cause_of_death
+```
+#A Little More Cleaning
+```{r}
+longer_cause_of_death_clean <- longer_cause_of_death %>% 
+  rename( year = "year", country_code = "code")
+longer_cause_of_death_clean
+```
+
+#Selecting Countries of Interest(Asia)/Selecting popular tourist countries in Asia
+```{r}
+tourist_countries_asia_death <- longer_cause_of_death_clean %>% 
+  filter(country_code %in% c("THA","VNM","JPN","IND","IDN","CHN","KHM", "PHL", "MDV","KOR","MYS","MMR","LAO","SGP", "BGD"))
+tourist_countries_asia_death
+```
+#Sorting into more recent years (2010 and on)
+```{r}
+modern_cause_of_death <- tourist_countries_asia_death%>% 
+filter(year>= 2010)
+modern_cause_of_death
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### The Big App
 
 ```{r}
 library(shiny)
 
-ui <- dashboardPage(
-  dashboardHeader(title = "Causes of Deaths by Country"),
-  dashboardSidebar(disable = T),
+ui <- dashboardPage(skin = "purple",
+  dashboardHeader(title = "Causes of Deaths Graphs", titleWidth = 250),
+  dashboardSidebar(width = 150,
+    sidebarMenu(
+      menuItem("South America", tabName = "south_america", icon = icon("earth-americas")),
+      menuItem("East Asia", tabName = "east_asia", icon = icon("earth-asia") )
+              )
+             ),
+  
+  
+  
   dashboardBody(
+    tabItems(
+      tabItem("south_america",
+        fluidRow(
+          titlePanel("Cause of Deaths For Each South American Country"),
+          
+          box(helpText("Reference: Max Roser, Hannah Ritchie, and Fiona Spooner (2021) - 'Burden of disease'. Published online at OurWorldInData.org. Retrieved from: https://ourworldindata.org/burden-of-disease [Online Resource]. Kaggle: https://www.kaggle.com/datasets/iamsouravbanerjee/cause-of-deaths-around-the-world")
+          )
+        ),
+        fluidRow(
+          
+          box(title = "Plot Options", width = 3,
+            selectInput("cause", "Select Cause of Death", choices = south_america$causes, selected = "malaria"),
+            
+            selectInput("year1", "Select Year (1990 - 2019)", choices = south_america$year, selected = "1990")
+            ),
+            
+        
+          
+          box(plotOutput("plot", width = "500px", height = "700px")
+              )
+            ),
     fluidRow(
       box(title = "Plot Options", width = 3,
-          selectInput("cause", "Select Cause of Death", choices = south_america$causes, 
+          selectInput("cause1", "Select Cause of Death", choices = south_america$causes, 
                       selected = "malaria"),
-          selectInput("year", "Select Range of Year (1990 - 2019)", choices = south_america$year),
+          selectInput("country", "Select Country", choices = south_america$country_territory, selected = "Brazil"),
       ),
-       box(plotOutput("plot", width = "500px", height = "500px")
+       box(plotOutput("plot2", width = "500px", height = "700px")
       )
     ),
     fluidRow(
       box(title = "Plot Options", width = 3,
-          selectInput("cause", "Select Cause of Death", choices = south_america$causes, 
-                      selected = "malaria"),
-          selectInput("country", "Select Country", choices = south_america$country_territory),
+          selectInput("country2", "Select Country", choices = south_america$country_territory, selected = "Brazil"),
       ),
-       box(plotOutput("plot2", width = "500px", height = "500px")
+       box(plotOutput("plot3", width = "500px", height = "700px")
+      )
+    )
+  ),
+  
+  
+  
+  
+  tabItem("east_asia",
+          
+          fluidRow(
+          titlePanel("Cause of Deaths For Each East Asian Country"),
+          
+          box(helpText("Reference: Max Roser, Hannah Ritchie, and Fiona Spooner (2021) - 'Burden of disease'. Published online at OurWorldInData.org. Retrieved from: https://ourworldindata.org/burden-of-disease [Online Resource]. Kaggle: https://www.kaggle.com/datasets/iamsouravbanerjee/cause-of-deaths-around-the-world")
+          )
+        ),
+        
+        fluidRow(
+            
+    box(title = "Plot Settings", width =3,   
+    selectInput("x1", "Select Country", choices = c("Bangladesh", "Cambodia","China","India","Indonesia","Japan","Laos","Malaysia","Maldives","Myanmar","Philippines","Singapore","South Korea","Thailand", "Vietnam"), selected = "Cambodia"),
+    
+    selectInput("y1", "Select Cause of Death", choices = c("alcohol_use_disorders","diarrheal_diseases","drowning","drug_use_disorders","exposure_to_forces_of_nature","hiv_aids","interpersonal_violence","lower_respiratory_infections","malaria","tuberculosis","environmental_heat_and_cold_exposure","conflict_and_terrorism","poisonings	","protein_energy_malnutrition","road_injuries","digestive_diseases","fire_heat_and_hot_substances"), selected = "alcohol_use_disorders" )
+      ),
+    
+    
+  box(plotOutput("ben_plot_1", width = "500px", height = "400px")
+      )
+  ),
+  
+  
+  fluidRow(
+    box(title = "Plot Settings", width =3,
+      selectInput("x2", "Select Country", choices = c("Bangladesh", "Cambodia","China","India","Indonesia","Japan","Laos","Malaysia","Maldives","Myanmar","Philippines","Singapore","South Korea","Thailand", "Vietnam"), selected = "Thailand")
+      ),
+  
+    box(plotOutput("ben_plot_2", width = "500px", height = "400px")
+  )
+  ),
+  
+  
+  fluidRow(
+      box(title = "Plot Settings",width = 3,
+          
+            selectInput("y3", "Select Year", choices = c("2010","2011","2012","2013","2014","2015","2016","2017", "2018", "2019"), selected = "2010"),
+          
+          selectInput("x3", "Select Country", choices = c("Bangladesh", "Cambodia","China","India","Indonesia","Japan","Laos","Malaysia","Maldives","Myanmar","Philippines","Singapore","South Korea","Thailand", "Vietnam"), selected = "Thailand"),
+      ),
+          
+      box(plotOutput("ben_plot_3", width = "500px", height = "400px")
+            )
+          )
+        )
       )
     )
   )
-)
+
+
 
 server <- function(input, output, session) {
   
@@ -100,9 +273,13 @@ server <- function(input, output, session) {
     
     south_america %>% 
       filter(causes == input$cause) %>% # user selects death type
-      filter(year == input$year) %>% # user selects year
+      filter(year == input$year1) %>% # user selects year
       ggplot(aes(x= country_territory, y= deaths, fill = country_territory))+ 
-        geom_col()
+      geom_col(stat = "identity")+
+      scale_fill_manual(values=c("#43A1D5","#F8E600", "#009c3b", "#0039a6", "#FCD116", "#ed1c24", "#009739", "#0038a8", "#D91023", "#377e3f", "#0038a8", "#FFCC00"))+
+      theme_light() +
+      theme(axis.text.x = element_text(angle = 60, hjust = 1))+
+      labs(x= "Countries", y= "Number of Deaths", fill= "Country", title= "Deaths Yearly Sorted by Cause per Country")
       
   })
   
@@ -110,10 +287,57 @@ server <- function(input, output, session) {
     
     south_america %>% 
   filter(country_territory == input$country) %>% 
-  filter(causes == input$cause) %>% 
+  filter(causes == input$cause1) %>% 
   mutate(year = as_factor(year)) %>% 
   ggplot(aes(x=year, y= deaths))+
-  geom_col()
+  geom_col(fill = "deepskyblue4")+
+      theme_light() +
+      theme(axis.text.x = element_text(angle = 60, hjust = 1))+
+      labs(x= "Year", y= "Number of Deaths")
+    
+  })
+  
+  output$plot3 <- renderPlot({
+    
+    south_america %>% 
+  filter(country_territory == input$country2) %>% 
+  ggplot(aes(x=year, y= deaths, color = causes))+
+  geom_line()+
+      theme_light() +
+      theme(axis.text.x = element_text(angle = 60, hjust = 1))+
+      scale_color_discrete(labels=c("Alcohol Use Disorders", "Conflict and Terrorism", "Diarrheal Diseases", "Digestive Diseases", "Drowning", "Environmental Heat and Cold Exposure", "Exposure To Forces of Nature", "HIV / AIDS", "Interpersonal Violence", "Malaria", "Poisonings", "Protein / Energy Malnutrition", "Road Injuries", "Tuberculosis"))+
+      labs(x= "Years", y= "Number of Deaths", color="Causes")
+    
+  })
+  
+  output$ben_plot_1 <- renderPlot({
+    
+    modern_cause_of_death %>% 
+      filter(country == input$x1) %>% 
+      filter(cause_of_death==input$y1) %>% 
+      mutate(year = as_factor(year)) %>% 
+      ggplot(aes(x=year, y=deaths, fill=year))+geom_col()+labs(title = "Number of Deaths by Cause per Year from 2010-2019", x= "Year 2010-2019", y="Number of Deaths", fill = "Year")
+    
+  })
+  
+  output$ben_plot_2 <- renderPlot({
+    
+    modern_cause_of_death %>% 
+      
+     filter(country == input$x2) %>% 
+  ggplot(aes(x=year, y= deaths, color = cause_of_death))+
+  geom_line()+labs(title = "Deaths yearly sorted by Cause per Country", x= "Year 2010-2019", y="Number of Deaths", color = "Cause of Death")+
+      scale_color_discrete(labels=c("Alcohol Use Disorders", "Conflict and Terrorism", "Diarrheal Diseases", "Digestive Diseases", "Drowning", "Environmental Heat and Cold Exposure", "Exposure To Forces of Nature", "Fire/Heat and Hot Substances", "HIV / AIDS", "Interpersonal Violence", "Lower Respiratory Infections", "Malaria", "Poisonings", "Protein / Energy Malnutrition", "Road Injuries", "Tuberculosis"))
+    
+  })
+  
+  output$ben_plot_3 <- renderPlot({
+    
+    modern_cause_of_death %>% 
+      filter(year== input$y3) %>% 
+      filter(country== input$x3) %>% 
+      ggplot(aes(x=cause_of_death, y= deaths, fill=cause_of_death))+geom_col()+theme(axis.text.x =)+labs(title = "Deaths in Asia Sorted by Country and Year", x= "Cause of Death", y="Number of Deaths", fill = "Cause of Death")+ theme(axis.text.x = element_blank(), axis.ticks = element_blank())+
+      scale_fill_discrete(labels=c("Alcohol Use Disorders", "Conflict and Terrorism", "Diarrheal Diseases", "Digestive Diseases", "Drowning", "Environmental Heat and Cold Exposure", "Exposure To Forces of Nature", "Fire/Heat and Hot Substances", "HIV / AIDS", "Interpersonal Violence", "Lower Respiratory Infections", "Malaria", "Poisonings", "Protein / Energy Malnutrition", "Road Injuries", "Tuberculosis"))
     
   })
   
@@ -132,122 +356,26 @@ south_america %>%
   geom_col()
 ```
 
-```{r}
-south_america %>% 
-      filter(causes == "malaria") %>% 
-      pivot_wider(names_from = causes, values_from = deaths) %>% 
-      filter(year == 2019) %>% 
-      ggplot(aes(x= country_territory, y= malaria, fill= country_territory))+
-        geom_col()
-```
+
 
 ```{r}
 south_america %>% 
   filter(country_territory == "Brazil") %>% 
   ggplot(aes(x=year, y= deaths, color = causes))+
-  geom_line() 
-```
-
-```{r}
-south_america %>% 
-  filter(country_territory == "Brazil") %>% 
-  pivot_wider(names_from = causes, values_from = deaths) %>%
-  mutate(year = as_factor(year)) %>% 
-  ggplot(aes(x=year, y= malaria))+
-  geom_col()
-```
-
-```{r}
-library(shiny)
-
-ui <- dashboardPage(
-  dashboardHeader(title = "Causes of Deaths by Country"),
-  dashboardSidebar(disable = F),
-  dashboardBody(
-    fluidRow(
-      box(title = "Plot Options", width = 3,
-          selectInput("cause", "Select Cause of Death", choices = south_america$causes, 
-                      selected = "malaria"),
-          selectInput("country", "Select Country", choices = south_america$country_territory),
-      ),
-       box(plotOutput("plot2", width = "500px", height = "500px")
-      )
-    )
-  )
-)
-
-server <- function(input, output, session) {
-  
-  output$plot2 <- renderPlot({
-    
-    south_america %>% 
-  filter(country_territory == input$country) %>% 
-  filter(causes == input$cause) %>% 
-  mutate(year = as_factor(year)) %>% 
-  ggplot(aes(x=year, y= deaths))+
-  geom_col()
-    
-  })
-  
-  session$onSessionEnded(stopApp)
-}
-
-shinyApp(ui, server)
+  geom_line()+
+      theme_light(base_size = 10) +
+      theme(axis.text.x = element_text(angle = 60, hjust = 1))+
+      labs(x= "Years", y= "Number of Deaths", title = "Deaths by Causes over the Years", color = "Causes")+
+  scale_color_discrete(labels=c("Alcohol Use Disorders", "Conflict and Terrorism", "Diarrheal Diseases", "Digestive Diseases", "Drowning", "Environmental Heat and Cold Exposure", "HIV / AIDS", "Interpersonal Violence", "Malaria", "Poisonings", "Protein / Energy Malnutrition", "Road Injuries", "Tuberculosis"))
 ```
 
 
 
-```{r}
-south_america %>% 
-  filter(country_territory == "Venezuela
-         ") %>% 
-  pivot_wider(names_from = causes, values_from = deaths) %>%
-  mutate(year = as_factor(year)) %>% 
-  ggplot(aes(x=year, y= malaria))+
-  geom_col()
-```
 
 
-```{r}
-south_america %>% 
-  filter(year >= 1990) %>% 
-  filter(year <= 2005) %>% 
-  
-```
 
 
-```{r}
-library(shiny)
 
-ui <- dashboardBody(
-    fluidRow(
-      box(title = "Plot Options", width = 3,
-          selectInput("cause", "Select Cause of Death", choices = south_america$causes, 
-                      selected = "malaria"),
-          selectInput("country", "Select Country", choices = south_america$country_territory),
-      ),
-       box(plotOutput("plot2", width = "500px", height = "500px")
-       )
-    )
-)
 
-server <- function(input, output, session) {
-  
-    output$plot2 <- renderPlot({
-    
-    south_america %>% 
-  filter(country_territory == input$country) %>% 
-  filter(causes == input$cause) %>% 
-  mutate(year = as_factor(year)) %>% 
-  ggplot(aes(x=year, y= deaths))+
-  geom_col()
-    
-  })
-  
-  session$onSessionEnded(stopApp)
 
-}
-
-shinyApp(ui, server)
-```
 
