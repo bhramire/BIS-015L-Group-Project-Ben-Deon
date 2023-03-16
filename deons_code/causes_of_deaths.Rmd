@@ -279,7 +279,7 @@ server <- function(input, output, session) {
       scale_fill_manual(values=c("#43A1D5","#F8E600", "#009c3b", "#0039a6", "#FCD116", "#ed1c24", "#009739", "#0038a8", "#D91023", "#377e3f", "#0038a8", "#FFCC00"))+
       theme_light() +
       theme(axis.text.x = element_text(angle = 60, hjust = 1))+
-      labs(x= "Countries", y= "Number of Deaths", fill= "Country", title= "Deaths Yearly Sorted by Cause per Country")
+      labs(x= "Countries", y= "Number of Deaths", fill= "Country", title= "Number of Deaths per Country for each Cause of Death")
       
   })
   
@@ -293,7 +293,7 @@ server <- function(input, output, session) {
   geom_col(fill = "deepskyblue4")+
       theme_light() +
       theme(axis.text.x = element_text(angle = 60, hjust = 1))+
-      labs(x= "Year", y= "Number of Deaths")
+      labs(x= "Year", y= "Number of Deaths", title = "Number of Deaths over the Years for each Cause of Death and Country")
     
   })
   
@@ -306,7 +306,7 @@ server <- function(input, output, session) {
       theme_light() +
       theme(axis.text.x = element_text(angle = 60, hjust = 1))+
       scale_color_discrete(labels=c("Alcohol Use Disorders", "Conflict and Terrorism", "Diarrheal Diseases", "Digestive Diseases", "Drowning", "Environmental Heat and Cold Exposure", "Exposure To Forces of Nature", "HIV / AIDS", "Interpersonal Violence", "Malaria", "Poisonings", "Protein / Energy Malnutrition", "Road Injuries", "Tuberculosis"))+
-      labs(x= "Years", y= "Number of Deaths", color="Causes")
+      labs(x= "Years", y= "Number of Deaths", color="Causes", title= "Deaths Yearly Sorted by Cause per Country")
     
   })
   
